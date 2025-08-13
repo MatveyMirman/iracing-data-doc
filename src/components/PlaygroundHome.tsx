@@ -125,40 +125,43 @@ export default function PlaygroundHome() {
           <section className="flex-1 flex flex-col items-center justify-start p-8 overflow-y-auto">
             {selected ? (
               <>
-                <div className="w-full flex flex-col items-center mb-6">
-                  <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 capitalize">
-                    {selected.name.replace(/\//g, ' / ')}
-                  </h2>
-                  <div className="h-1 w-16 bg-primary/20 rounded-full mb-2"></div>
-                </div>
-                <div className="flex flex-col md:flex-row gap-6 w-full items-stretch min-h-[500px]">
-                  <div className="w-full max-w-2xl flex-1 flex flex-col min-h-full">
-                    <Card className="flex-1 flex flex-col min-h-full">
-                      <CardContent className="p-6 h-full flex flex-col justify-center">
-                        {docLoading ? (
-                          <div className="text-muted-foreground">Loading documentation…</div>
-                        ) : docError ? (
-                          <div className="text-destructive">{docError}</div>
-                        ) : doc ? (
-                          <EndpointDocDisplay doc={doc} />
-                        ) : (
-                          <div>No documentation found.</div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                  <div className="w-full max-w-2xl flex-1 flex flex-col min-h-full">
-                    {doc && (
-                      <Card className="flex-1 flex flex-col min-h-full">
-                        <EndpointTest
-                          endpoint={selected.name}
-                          params={{}}
-                          paramDefs={doc.parameters || {}}
-                          credentials={credentials}
-                        />
-                      </Card>
-                    )}
-                  </div>
+                {(() => {
+                  const prettify = (name: string) =>
+                    name
+                      .split('/')
+                      .map(seg => seg.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+                      .join(' / ');
+                  return (
+                    <div className="w-full flex flex-col items-center mb-6">
+                      <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2">
+                        {prettify(selected.name)}
+                      </h2>
+                      <div className="h-1 w-16 bg-primary/20 rounded-full"></div>
+                    </div>
+                  );
+                })()}
+                <div className="grid w-full gap-6 md:grid-cols-2 items-start">
+                  <Card className="w-full h-full">
+                    <CardContent className="p-6 flex flex-col gap-4">
+                      {docLoading ? (
+                        <div className="text-muted-foreground">Loading documentation…</div>
+                      ) : docError ? (
+                        <div className="text-destructive">{docError}</div>
+                      ) : doc ? (
+                        <EndpointDocDisplay doc={doc} />
+                      ) : (
+                        <div>No documentation found.</div>
+                      )}
+                    </CardContent>
+                  </Card>
+                  {doc && (
+                    <EndpointTest
+                      endpoint={selected.name}
+                      params={{}}
+                      paramDefs={doc.parameters || {}}
+                      credentials={credentials}
+                    />
+                  )}
                 </div>
               </>
             ) : (
