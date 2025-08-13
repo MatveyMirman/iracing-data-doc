@@ -1,15 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 export interface EndpointDoc {
   name: string;
   url: string;
 }
 
-export default function EndpointList({ onSelect, credentials }: { onSelect: (endpoint: EndpointDoc) => void, credentials: { email: string; password: string } }) {
+export default function EndpointList({ onSelect, credentials, selectedEndpoint }: { onSelect: (endpoint: EndpointDoc) => void, credentials: { email: string; password: string }, selectedEndpoint?: string }) {
   const [endpoints, setEndpoints] = useState<EndpointDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     async function fetchEndpoints() {
@@ -36,21 +38,44 @@ export default function EndpointList({ onSelect, credentials }: { onSelect: (end
     fetchEndpoints();
   }, [credentials]);
 
-  if (loading) return <div>Loading endpoints…</div>;
-  if (error) return <div>{error}</div>;
+  // Group endpoints by first segment
+  const tree: { [group: string]: EndpointDoc[] } = {};
+  endpoints.forEach((ep) => {
+    const [group, ...rest] = ep.name.split("/");
+    if (!tree[group]) tree[group] = [];
+    tree[group].push(ep);
+  });
+
+  if (loading) return <div className="p-4 text-muted-foreground">Loading endpoints…</div>;
+  if (error) return <div className="p-4 text-destructive">{error}</div>;
 
   return (
-    <div>
-      <h3>Available Endpoints</h3>
-      <ul style={{ maxHeight: 400, overflowY: "auto", padding: 0 }}>
-        {endpoints.map((ep) => (
-          <li key={ep.url} style={{ listStyle: "none", margin: "4px 0" }}>
-            <button onClick={() => onSelect(ep)} style={{ textAlign: "left", width: "100%" }}>
-              {ep.name}
-            </button>
-          </li>
+    <aside className="w-64 h-full bg-card border-r flex flex-col p-4 overflow-y-auto">
+      <h3 className="font-bold text-lg mb-4">Available Endpoints</h3>
+      <nav>
+        {Object.entries(tree).map(([group, endpoints]) => (
+          <Collapsible key={group} open={openGroups[group] ?? true} onOpenChange={(open) => setOpenGroups((prev) => ({ ...prev, [group]: open }))}>
+            <CollapsibleTrigger className="w-full flex items-center justify-between font-semibold py-2 px-2 rounded hover:bg-accent focus:bg-accent transition">
+              <span>{group}</span>
+              <span className="ml-2">{openGroups[group] ?? true ? "▾" : "▸"}</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ul className="pl-4">
+                {endpoints.map((ep) => (
+                  <li key={ep.url}>
+                    <button
+                      className={`w-full text-left py-1 px-2 rounded hover:bg-accent focus:bg-accent transition ${selectedEndpoint === ep.name ? "bg-accent font-bold" : ""}`}
+                      onClick={() => onSelect(ep)}
+                    >
+                      {ep.name.split("/").slice(1).join("/")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
         ))}
-      </ul>
-    </div>
+      </nav>
+    </aside>
   );
 }

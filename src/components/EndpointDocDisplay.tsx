@@ -50,7 +50,11 @@ export function EndpointDocDisplay({ doc }: { doc: any }) {
                     <TableCell className="font-mono text-xs">{name}</TableCell>
                     <TableCell>{param.type || ""}</TableCell>
                     <TableCell>{param.required ? "Yes" : ""}</TableCell>
-                    <TableCell>{param.note || ""}</TableCell>
+                    <TableCell>
+                      <div className="max-w-xs whitespace-pre-line break-words bg-muted/50 rounded px-2 py-1 text-xs text-muted-foreground">
+                        {param.note || ""}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
