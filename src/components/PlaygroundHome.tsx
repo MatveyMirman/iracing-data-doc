@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { EndpointDocDisplay } from "./EndpointDocDisplay";
 import LoginTest from "./LoginTest";
 import EndpointList, { EndpointDoc } from "./EndpointList";
 
@@ -21,7 +22,7 @@ export default function PlaygroundHome() {
     fetch("/api/endpoint-doc", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...credentials, url: selected.url }),
+      body: JSON.stringify({ ...credentials, endpoint: selected.name }),
     })
       .then(res => res.json())
       .then(data => {
@@ -63,7 +64,7 @@ export default function PlaygroundHome() {
                   ) : docError ? (
                     <div style={{ color: 'red' }}>{docError}</div>
                   ) : doc ? (
-                    <pre style={{ fontSize: 15, whiteSpace: 'pre', margin: 0 }}>{JSON.stringify(doc, null, 2)}</pre>
+                    <EndpointDocDisplay doc={doc} />
                   ) : (
                     <div>No documentation found.</div>
                   )}
