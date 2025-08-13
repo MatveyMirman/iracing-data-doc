@@ -1,12 +1,19 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import { EndpointDocDisplay } from "./EndpointDocDisplay";
 import LoginTest from "./LoginTest";
 import EndpointList, { EndpointDoc } from "./EndpointList";
 
 export default function PlaygroundHome() {
   const [selected, setSelected] = useState<EndpointDoc | null>(null);
-  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
+    const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [doc, setDoc] = useState<any | null>(null);
   const [docLoading, setDocLoading] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
@@ -35,8 +42,59 @@ export default function PlaygroundHome() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      {!credentials ? (
-        <LoginTest onSuccess={(email, password) => setCredentials({ email, password })} />
+        {!credentials ? (
+          <div className="flex min-h-screen items-center justify-center">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>iRacing Login</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form
+                  className="flex flex-col gap-4"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setLoginError(null);
+                    setLoading(true);
+                    try {
+                      const res = await fetch("/api/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, password }),
+                      });
+                      if (!res.ok) throw new Error("Login failed");
+                      setCredentials({ email, password });
+                    } catch (err) {
+                      setLoginError("Invalid credentials or network error.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                >
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                    required
+                  />
+                  {loginError && (
+                    <div className="text-destructive text-sm text-center">{loginError}</div>
+                  )}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Logging in..." : "Login"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
       ) : (
         <div style={{ display: "flex", gap: 32 }}>
           <EndpointList onSelect={setSelected} credentials={credentials} />
