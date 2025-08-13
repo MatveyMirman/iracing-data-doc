@@ -68,7 +68,7 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
   };
 
   return (
-    <Card className="w-full h-full">
+    <Card className="w-full h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
       <CardContent className="p-6 flex-1 flex flex-col min-h-full">
         {/* Buttons at the top */}
         <div className="flex flex-row items-center gap-4 mb-4">

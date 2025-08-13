@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -109,17 +110,20 @@ export default function PlaygroundHome() {
           </div>
       ) : (
   <div className="relative w-full h-full flex-1">
-        {/* Fixed logout button in top-right */}
-        <Button
-          variant="default"
-          className="fixed top-6 right-8 z-50 shadow-lg px-6 py-2 text-base font-semibold"
-          onClick={() => {
-            setCredentials(null);
-            sessionStorage.removeItem("iracingCredentials");
-          }}
-        >
-          Log out
-        </Button>
+        {/* Fixed logout + theme switcher in top-right */}
+        <div className="fixed top-6 right-8 z-50 flex items-center gap-2">
+          <ThemeSwitcher />
+          <Button
+            variant="default"
+            className="shadow-lg px-6 py-2 text-base font-semibold"
+            onClick={() => {
+              setCredentials(null);
+              sessionStorage.removeItem("iracingCredentials");
+            }}
+          >
+            Log out
+          </Button>
+        </div>
         <div className="flex w-full h-[calc(100vh-0.5rem)] gap-0 bg-muted rounded-xl shadow-lg overflow-hidden">
           <EndpointList onSelect={setSelected} credentials={credentials} selectedEndpoint={selected?.name} />
           <section className="flex-1 flex flex-col items-center justify-start p-8 overflow-y-auto">
