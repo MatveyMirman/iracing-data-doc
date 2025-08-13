@@ -51,7 +51,10 @@ export default function EndpointList({ onSelect, credentials, selectedEndpoint }
 
   return (
     <aside className="w-64 h-full bg-card border-r flex flex-col p-4 overflow-y-auto">
-      <h3 className="font-bold text-lg mb-4">Available Endpoints</h3>
+      <div className="mb-6">
+        <h2 className="font-extrabold text-xl tracking-tight text-primary mb-2">iRacing data API</h2>
+        <h3 className="font-bold text-base mb-2">Available Endpoints</h3>
+      </div>
       <nav>
         {Object.entries(tree).map(([group, endpoints]) => (
           <Collapsible key={group} open={openGroups[group] ?? true} onOpenChange={(open) => setOpenGroups((prev) => ({ ...prev, [group]: open }))}>

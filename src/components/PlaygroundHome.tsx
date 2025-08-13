@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { EndpointDocDisplay } from "./EndpointDocDisplay";
+import EndpointTest from "./EndpointTest";
 import LoginTest from "./LoginTest";
 import EndpointList, { EndpointDoc } from "./EndpointList";
 
@@ -51,7 +52,7 @@ export default function PlaygroundHome() {
   }, [selected, credentials]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+  <main className="flex min-h-screen w-full flex-col items-stretch justify-stretch bg-muted">
         {!credentials ? (
           <div className="flex min-h-screen items-center justify-center">
             <Card className="w-full max-w-md">
@@ -107,7 +108,7 @@ export default function PlaygroundHome() {
             </Card>
           </div>
       ) : (
-      <div className="relative w-full">
+  <div className="relative w-full h-full flex-1">
         {/* Fixed logout button in top-right */}
         <Button
           variant="default"
@@ -119,26 +120,46 @@ export default function PlaygroundHome() {
         >
           Log out
         </Button>
-        <div className="flex w-full h-[80vh] gap-0 bg-muted rounded-xl shadow-lg overflow-hidden">
+        <div className="flex w-full h-[calc(100vh-0.5rem)] gap-0 bg-muted rounded-xl shadow-lg overflow-hidden">
           <EndpointList onSelect={setSelected} credentials={credentials} selectedEndpoint={selected?.name} />
           <section className="flex-1 flex flex-col items-center justify-start p-8 overflow-y-auto">
             {selected ? (
               <>
-                <h2 className="text-2xl font-bold mb-4">{selected.name}</h2>
-                <Card className="w-full max-w-2xl mb-4">
-                  <CardContent className="p-6">
-                    {docLoading ? (
-                      <div className="text-muted-foreground">Loading documentation…</div>
-                    ) : docError ? (
-                      <div className="text-destructive">{docError}</div>
-                    ) : doc ? (
-                      <EndpointDocDisplay doc={doc} />
-                    ) : (
-                      <div>No documentation found.</div>
+                <div className="w-full flex flex-col items-center mb-6">
+                  <h2 className="text-3xl font-extrabold tracking-tight text-center mb-2 capitalize">
+                    {selected.name.replace(/\//g, ' / ')}
+                  </h2>
+                  <div className="h-1 w-16 bg-primary/20 rounded-full mb-2"></div>
+                </div>
+                <div className="flex flex-col md:flex-row gap-6 w-full items-stretch min-h-[500px]">
+                  <div className="w-full max-w-2xl flex-1 flex flex-col min-h-full">
+                    <Card className="flex-1 flex flex-col min-h-full">
+                      <CardContent className="p-6 h-full flex flex-col justify-center">
+                        {docLoading ? (
+                          <div className="text-muted-foreground">Loading documentation…</div>
+                        ) : docError ? (
+                          <div className="text-destructive">{docError}</div>
+                        ) : doc ? (
+                          <EndpointDocDisplay doc={doc} />
+                        ) : (
+                          <div>No documentation found.</div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <div className="w-full max-w-2xl flex-1 flex flex-col min-h-full">
+                    {doc && (
+                      <Card className="flex-1 flex flex-col min-h-full">
+                        <EndpointTest
+                          endpoint={selected.name}
+                          params={{}}
+                          paramDefs={doc.parameters || {}}
+                          credentials={credentials}
+                        />
+                      </Card>
                     )}
-                  </CardContent>
-                </Card>
-                {/* Playground for this endpoint will go here */}
+                  </div>
+                </div>
               </>
             ) : (
               <div className="text-muted-foreground text-lg">Select an endpoint to view details</div>

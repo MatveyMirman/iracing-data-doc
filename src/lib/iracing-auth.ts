@@ -1,3 +1,27 @@
+// Helper to get an authenticated client and provide a fetch-like method
+export async function getSessionAuthClient(email: string, password: string) {
+  const client = new IracingAuthClient(email, password);
+  await client.signIn();
+  return {
+    fetch: async (url: string, options: any = {}) => {
+      const api = client.getApiClient();
+      // Map fetch options to axios
+      const axiosOptions: any = {
+        method: options.method || 'GET',
+        url,
+        headers: options.headers || {},
+        data: options.body,
+        responseType: 'json',
+      };
+      const res = await api.request(axiosOptions);
+      return {
+        ok: res.status >= 200 && res.status < 300,
+        status: res.status,
+        json: async () => res.data,
+      };
+    },
+  };
+}
 import axios, { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
