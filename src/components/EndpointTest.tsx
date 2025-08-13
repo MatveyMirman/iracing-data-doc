@@ -1,4 +1,27 @@
 "use client";
+// Simple JSON syntax highlighter
+function syntaxHighlight(json: string) {
+  if (!json) return '';
+  // Escape HTML
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+    let cls = '';
+    if (/^".*"$/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = 'text-blue-700 dark:text-blue-300'; // key
+      } else {
+        cls = 'text-green-700 dark:text-green-300'; // string
+      }
+    } else if (/true|false/.test(match)) {
+      cls = 'text-purple-700 dark:text-purple-300'; // boolean
+    } else if (/null/.test(match)) {
+      cls = 'text-gray-500 dark:text-gray-400'; // null
+    } else {
+      cls = 'text-orange-700 dark:text-orange-300'; // number
+    }
+    return `<span class=\"${cls}\">${match}</span>`;
+  });
+}
 import React, { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
@@ -145,9 +168,9 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
               {result.link ? 'Show Raw JSON Result' : 'Hide Raw JSON Result'}
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96">
-                {JSON.stringify(result, null, 2)}
-              </pre>
+              <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96" style={{ fontFamily: 'Menlo, monospace' }}
+                dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(result, null, 2)) }}
+              />
             </CollapsibleContent>
           </Collapsible>
         )}
@@ -155,9 +178,9 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
         {linkedData && (
           <div className="mt-4">
             <div className="font-semibold mb-1">Linked Data:</div>
-            <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96">
-              {JSON.stringify(linkedData, null, 2)}
-            </pre>
+              <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96" style={{ fontFamily: 'Menlo, monospace' }}
+                dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(linkedData, null, 2)) }}
+              />
           </div>
         )}
       </CardContent>
