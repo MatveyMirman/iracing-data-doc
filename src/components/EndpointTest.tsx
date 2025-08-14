@@ -103,7 +103,7 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
           >
             {loading ? "Testing..." : testSuccess ? "Success" : "Test Endpoint"}
           </Button>
-          {result && result.link && (
+          {result && (result.data_url || result.link) && (
             <Button
               className="w-32 h-10"
               disabled={fetchingLink}
@@ -111,12 +111,13 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
                 setFetchingLink(true);
                 setLinkedData(null);
                 try {
+                  const endpointUrl = result.data_url || result.link;
                   const resp = await fetch("/api/test-endpoint", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       ...credentials,
-                      endpoint: result.link,
+                      endpoint: endpointUrl,
                       params: {},
                     }),
                   });
@@ -163,9 +164,9 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
         {error && <div className="text-destructive mt-4">{error}</div>}
         {/* Collapsible raw JSON result */}
         {result && (
-          <Collapsible defaultOpen={!result.link}>
+          <Collapsible defaultOpen={!(result && (result.link || result.data_url))}>
             <CollapsibleTrigger className="font-semibold text-xs text-muted-foreground underline mb-2">
-              {result.link ? 'Show Raw JSON Result' : 'Hide Raw JSON Result'}
+              {(result && (result.link || result.data_url)) ? 'Show Raw JSON Result' : 'Hide Raw JSON Result'}
             </CollapsibleTrigger>
             <CollapsibleContent>
               <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96" style={{ fontFamily: 'Menlo, monospace' }}
