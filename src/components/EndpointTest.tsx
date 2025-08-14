@@ -22,11 +22,15 @@ function syntaxHighlight(json: string) {
     return `<span class=\"${cls}\">${match}</span>`;
   });
 }
+
 import React, { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { CodeBlock } from "./CodeBlock";
+import { generateTypesFromJson } from "../lib/jsonTypegen";
+
 
 interface EndpointTestProps {
   endpoint: string;
@@ -36,12 +40,18 @@ interface EndpointTestProps {
 }
 
 export default function EndpointTest({ endpoint, params, paramDefs, credentials }: EndpointTestProps) {
+
+
   const [form, setForm] = useState<Record<string, string>>(params);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [linkedData, setLinkedData] = useState<any>(null);
   const [fetchingLink, setFetchingLink] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [schema, setSchema] = useState<string>("");
+  const [showSchema, setShowSchema] = useState(false);
+  const [linkedSchema, setLinkedSchema] = useState<string>("");
+  const [showLinkedSchema, setShowLinkedSchema] = useState(false);
 
   // Track if last test was successful
   const [testSuccess, setTestSuccess] = useState(false);
@@ -54,6 +64,8 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
     setError(null);
     setLoading(false);
     setFetchingLink(false);
+    setSchema("");
+    setShowSchema(false);
   }, [endpoint]);
 
   const allParams = Object.entries(paramDefs);
@@ -68,6 +80,8 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
     setError(null);
     setResult(null);
     setTestSuccess(false);
+    setSchema("");
+    setShowSchema(false);
     try {
       const res = await fetch("/api/test-endpoint", {
         method: "POST",
@@ -82,6 +96,15 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
       if (!res.ok) throw new Error(data.error || "Request failed");
       setResult(data.result);
       setTestSuccess(true);
+      // Generate schema from result
+      if (data.result) {
+        try {
+          const types = await generateTypesFromJson(JSON.stringify(data.result));
+          setSchema(types);
+        } catch (err) {
+          setSchema("// Failed to generate schema");
+        }
+      }
     } catch (err: any) {
       setError(err.message || "Unknown error");
       setTestSuccess(false);
@@ -123,8 +146,18 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
                   });
                   const data = await resp.json();
                   setLinkedData(data.result);
+                  // Generate schema for linked data
+                  if (data.result) {
+                    try {
+                      const types = await generateTypesFromJson(JSON.stringify(data.result));
+                      setLinkedSchema(types);
+                    } catch (err) {
+                      setLinkedSchema("// Failed to generate schema");
+                    }
+                  }
                 } catch (err) {
                   setLinkedData({ error: 'Failed to fetch linked data' });
+                  setLinkedSchema("");
                 } finally {
                   setFetchingLink(false);
                 }
@@ -162,26 +195,64 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
           ))}
         </form>
         {error && <div className="text-destructive mt-4">{error}</div>}
-        {/* Collapsible raw JSON result */}
+        {/* Collapsible raw JSON result and schema preview */}
         {result && (
-          <Collapsible defaultOpen={!(result && (result.link || result.data_url))}>
-            <CollapsibleTrigger className="font-semibold text-xs text-muted-foreground underline mb-2">
-              {(result && (result.link || result.data_url)) ? 'Show Raw JSON Result' : 'Hide Raw JSON Result'}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96" style={{ fontFamily: 'Menlo, monospace' }}
-                dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(result, null, 2)) }}
-              />
-            </CollapsibleContent>
-          </Collapsible>
+          <>
+            <div className="mb-2 w-full">
+              <Collapsible defaultOpen={!(result && (result.link || result.data_url))}>
+                <CollapsibleTrigger className="font-semibold text-xs text-muted-foreground underline">
+                  {(result && (result.link || result.data_url)) ? 'Show Raw JSON Result' : 'Hide Raw JSON Result'}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96 w-full" style={{ fontFamily: 'Menlo, monospace' }}
+                    dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(result, null, 2)) }}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+            {schema && (
+              <div className="mb-2 w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-8 px-2 py-1 text-xs"
+                  onClick={() => setShowSchema((v) => !v)}
+                >
+                  {showSchema ? "Hide Schema" : "Show Schema"}
+                </Button>
+              </div>
+            )}
+            {showSchema && schema && (
+              <div className="w-full">
+                <CodeBlock code={schema} language="typescript" />
+              </div>
+            )}
+          </>
         )}
         {/* Linked data display */}
         {linkedData && (
-          <div className="mt-4">
+          <div className="mt-4 w-full">
             <div className="font-semibold mb-1">Linked Data:</div>
-              <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96" style={{ fontFamily: 'Menlo, monospace' }}
-                dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(linkedData, null, 2)) }}
-              />
+            <pre className="p-4 bg-muted rounded text-xs overflow-x-auto max-h-96 w-full" style={{ fontFamily: 'Menlo, monospace' }}
+              dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(linkedData, null, 2)) }}
+            />
+            {linkedSchema && (
+              <div className="mt-2 w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-8 px-2 py-1 text-xs"
+                  onClick={() => setShowLinkedSchema((v) => !v)}
+                >
+                  {showLinkedSchema ? "Hide Schema" : "Show Schema"}
+                </Button>
+              </div>
+            )}
+            {showLinkedSchema && linkedSchema && (
+              <div className="w-full">
+                <CodeBlock code={linkedSchema} language="typescript" />
+              </div>
+            )}
           </div>
         )}
       </CardContent>
