@@ -66,6 +66,7 @@ export default function EndpointTest({ endpoint, params, paramDefs, credentials 
     setFetchingLink(false);
     setSchema("");
     setShowSchema(false);
+    setTestSuccess(false);
   }, [endpoint]);
 
   const allParams = Object.entries(paramDefs);
